@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0e0e10">
+<meta name="description" content="FinanFlow: controle de gastos simples, grátis e privado. Seus dados ficam só no seu aparelho.">
+<title>FinanFlow · Controle de gastos</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2322c55e'/%3E%3Cpath d='M8 21l5-5 4 4 7-8' stroke='%23141414' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="topo">
+  <div class="wrap">
+    <span class="marca">
+      <span class="mini-logo"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M8 21l5-5 4 4 7-8" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      <b>FinanFlow</b>
+    </span>
+    <button class="btn pequeno" id="novo-topo">+ Lançamento</button>
+  </div>
+</header>
+
+<main class="wrap">
+  <div id="aviso" class="aviso" hidden></div>
+
+  <!-- ---------- Boas-vindas (sem lançamentos) ---------- -->
+  <section class="boas-vindas" id="boas-vindas" hidden>
+    <h1>Bem-vindo ao FinanFlow</h1>
+    <p class="muted">Anote o que entra e o que sai e veja para onde vai o seu dinheiro. É grátis, e seus dados ficam só neste aparelho.</p>
+    <div class="bv-botoes">
+      <button class="btn" id="bv-comecar">+ Primeiro lançamento</button>
+      <button class="btn sec" id="bv-exemplo">Ver com dados de exemplo</button>
+    </div>
+    <p class="muted pequeno">Já usa em outro aparelho? <button class="link-btn" id="bv-restaurar">Restaurar um backup</button></p>
+  </section>
+
+  <!-- ---------- Painel ---------- -->
+  <section id="painel" hidden>
+    <div class="barra">
+      <button id="ant" aria-label="Mês anterior">‹</button>
+      <h1 id="titulo-mes"></h1>
+      <button id="prox" aria-label="Próximo mês">›</button>
+      <button id="hoje">Mês atual</button>
+    </div>
+
+    <div class="stats">
+      <div class="stat entrada"><span>Entradas</span><b id="s-ent">R$ 0</b><small id="s-ent-p"></small></div>
+      <div class="stat saida"><span>Saídas</span><b id="s-sai">R$ 0</b><small id="s-sai-p"></small></div>
+      <div class="stat saldo"><span>Saldo do mês</span><b id="s-saldo">R$ 0</b><small id="s-prev"></small></div>
+    </div>
+
+    <div id="atrasados" class="alerta" hidden></div>
+
+    <div class="grade">
+      <section class="cartao">
+        <h2>Para onde foi o dinheiro</h2>
+        <div id="categorias"></div>
+      </section>
+      <section class="cartao">
+        <h2>Últimos 6 meses</h2>
+        <div id="comparativo"></div>
+      </section>
+    </div>
+
+    <section class="cartao">
+      <div class="lista-topo">
+        <h2>Lançamentos</h2>
+        <button class="btn pequeno" id="novo">+ Novo</button>
+      </div>
+      <div class="filtros">
+        <div class="abas">
+          <button class="ativo" data-f="todos">Todos</button>
+          <button data-f="entrada">Entradas</button>
+          <button data-f="saida">Saídas</button>
+          <button data-f="pendente">Pendentes</button>
+        </div>
+        <input type="search" id="busca" placeholder="Buscar…" aria-label="Buscar lançamento">
+      </div>
+      <div id="lista"></div>
+      <div class="rodape-lista">
+        <button class="link-btn" id="csv">⬇ Baixar planilha do mês (Excel)</button>
+      </div>
+    </section>
+
+    <section class="cartao dados">
+      <h2>Seus dados</h2>
+      <p class="muted pequeno">Tudo fica guardado só neste navegador. Ninguém mais vê, nem nós. Faça backup de vez em quando: se você limpar o navegador ou trocar de aparelho, é o backup que traz tudo de volta.</p>
+      <div class="dados-botoes">
+        <button class="btn sec pequeno" id="backup">⬇ Baixar backup</button>
+        <button class="btn sec pequeno" id="restaurar">⬆ Restaurar backup</button>
+        <button class="btn sec pequeno perigo" id="apagar">Apagar tudo</button>
+      </div>
+      <p class="muted pequeno" id="info-backup"></p>
+    </section>
+  </section>
+
+  <input type="file" id="arquivo" accept=".json,application/json" hidden>
+</main>
+
+<!-- ---------- Formulário ---------- -->
+<dialog id="dlg">
+  <form id="form-l">
+    <h2 id="dlg-titulo">Novo lançamento</h2>
+    <div class="tipo">
+      <label><input type="radio" name="tipo" value="saida" checked> <span>Saída</span></label>
+      <label><input type="radio" name="tipo" value="entrada"> <span>Entrada</span></label>
+    </div>
+    <div class="campo">
+      <label for="f-desc">Descrição</label>
+      <input id="f-desc" required maxlength="80" placeholder="Ex.: Conta de luz" autocomplete="off">
+    </div>
+    <div class="linha">
+      <div class="campo">
+        <label for="f-valor">Valor (R$)</label>
+        <input id="f-valor" required inputmode="decimal" placeholder="0,00" autocomplete="off">
+      </div>
+      <div class="campo">
+        <label for="f-data">Data / vencimento</label>
+        <input id="f-data" type="date" required>
+      </div>
+    </div>
+    <div class="linha">
+      <div class="campo">
+        <label for="f-cat">Categoria</label>
+        <select id="f-cat"></select>
+      </div>
+      <div class="campo">
+        <label for="f-forma">Forma</label>
+        <select id="f-forma"></select>
+      </div>
+    </div>
+    <label class="check"><input type="checkbox" id="f-pago" checked> <span id="f-pago-txt">Já foi pago</span></label>
+    <div class="campo">
+      <label for="f-obs">Observação (opcional)</label>
+      <input id="f-obs" maxlength="200" autocomplete="off">
+    </div>
+    <div class="campo" id="repetir-box">
+      <label for="f-rep">Repetir todo mês</label>
+      <select id="f-rep">
+        <option value="1">Não repetir</option>
+        <option value="2">por 2 meses</option><option value="3">por 3 meses</option>
+        <option value="6">por 6 meses</option><option value="12">por 12 meses</option>
+      </select>
+    </div>
+    <p class="erro-msg" id="erro-form" role="alert"></p>
+    <div class="acoes">
+      <button type="button" class="btn sec" id="cancelar">Cancelar</button>
+      <button type="submit" class="btn" id="salvar">Salvar</button>
+    </div>
+  </form>
+</dialog>
+
+<script src="comum.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
